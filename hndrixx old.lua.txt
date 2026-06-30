@@ -1,5 +1,5 @@
 -- ================================================================
--- HNDRIXX PREMIUM V2.0 — GREY EDITION (SQUARE)
+-- LENGER PREMIUM V2.0 — GREY EDITION (SQUARE)
 -- ================================================================
 
 local TweenService = game:GetService("TweenService")
@@ -13,14 +13,14 @@ local AutoBuySettings = {
 	Amount = 10,
 	Mode = "PACK"
 }
-_G.HNDRIXX_AUTOBUY = AutoBuySettings
+_G.LENGER_AUTOBUY = AutoBuySettings
 
 -- ================================================================
 -- THANK YOU POPUP
 -- ================================================================
 local function showThankYouPopup()
 	local PopGui = Instance.new("ScreenGui")
-	PopGui.Name = "HNDRIXX_Popup"
+	PopGui.Name = "LENGER_Popup"
 	PopGui.ResetOnSpawn = false
 	PopGui.Parent = CoreGui
 
@@ -58,7 +58,7 @@ local function showThankYouPopup()
 	Ttl.Size = UDim2.new(1, -76, 0, 20)
 	Ttl.Position = UDim2.new(0, 72, 0, 9)
 	Ttl.BackgroundTransparency = 1
-	Ttl.Text = "HNDRIXX PREMIUM EDITION"
+	Ttl.Text = "LENGER PREMIUM EDITION"
 	Ttl.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Ttl.Font = Enum.Font.GothamBlack
 	Ttl.TextSize = 13
@@ -68,7 +68,7 @@ local function showThankYouPopup()
 	Msg.Size = UDim2.new(1, -76, 0, 16)
 	Msg.Position = UDim2.new(0, 72, 0, 32)
 	Msg.BackgroundTransparency = 1
-	Msg.Text = "TikTok · @hendriix"
+	Msg.Text = "TikTok · @LENGER_STORE"
 	Msg.TextColor3 = Color3.fromRGB(90, 90, 90)
 	Msg.Font = Enum.Font.Gotham
 	Msg.TextSize = 12
@@ -110,7 +110,7 @@ local function launchMainScript()
 	local MF_MIN_H,MF_MAX_H=350,720
 
 	local Gui = Instance.new("ScreenGui")
-	Gui.Name = "HNDRIXX_Grey"
+	Gui.Name = "LENGER_Grey"
 	Gui.ResetOnSpawn = false
 	Gui.DisplayOrder = 20  -- di atas overlay (5) biar panel tetap keliatan pas loading
 	Gui.Parent = CoreGui
@@ -243,7 +243,7 @@ local function launchMainScript()
 	TitleLbl.Size = UDim2.new(0.55, 0, 1, 0)
 	TitleLbl.Position = UDim2.new(0, 42, 0, 0)
 	TitleLbl.BackgroundTransparency = 1
-	TitleLbl.Text = "HNDRIXX PREMIUM"
+	TitleLbl.Text = "LENGER PREMIUM"
 	TitleLbl.TextColor3 = T.Text
 	TitleLbl.Font = Enum.Font.GothamBlack
 	TitleLbl.TextSize = 14
