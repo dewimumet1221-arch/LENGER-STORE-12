@@ -1,0 +1,202 @@
+-- ==================================================
+-- LENGER STORE MULTI FARM - VERSI HP
+-- Bisa dipakai di HP & PC, antarmuka sentuh
+-- Fitur: Bertani Otomatis, ESP, Teleport, Anti Mati
+-- ==================================================
+
+-- Layanan Utama
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- Pengaturan
+local Settings = {
+    AutoFarm = false,
+    ESP = false,
+    NoClip = false,
+    AntiDeath = false,
+    SafePos = Vector3.new(0,5,0),
+    TeleportLocations = {
+        ["Tempat 1"] = CFrame.new(100,5,100),
+        ["Tempat 2"] = CFrame.new(200,5,200),
+        ["Tempat Aman"] = CFrame.new(0,5,0)
+    }
+}
+
+-- ==================================================
+-- SISTEM TEMBUS DINDING
+-- ==================================================
+local NC_CollideData = {}
+local oldMeta = getrawmetatable(game)
+local oldIndex = oldMeta.__index
+setreadonly(oldMeta,false)
+
+oldMeta.__index = function(self,idx)
+    if idx == "CanCollide" and typeof(self)=="Instance" and NC_CollideData[self.Name]~=nil then
+        return NC_CollideData[self.Name]
+    end
+    return oldIndex(self,idx)
+end
+
+local function UpdateNoClip()
+    if not Settings.NoClip then return end
+    for _,part in ipairs(Character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            NC_CollideData[part.Name] = NC_CollideData[part.Name] or part.CanCollide
+            part.CanCollide = false
+        end
+    end
+end
+
+RunService.RenderStepped:Connect(UpdateNoClip)
+
+-- ==================================================
+-- ANTARMUKA SEDERHANA KHUSUS HP
+-- ==================================================
+local ScreenGui = Instance.new("ScreenGui", CoreGui)
+ScreenGui.Name = "LengerStore_HP"
+ScreenGui.ResetOnSpawn = false
+
+-- Tombol Buka/Tutup Menu
+local ToggleBtn = Instance.new("TextButton", ScreenGui)
+ToggleBtn.Size = UDim2.new(0,60,0,60)
+ToggleBtn.Position = UDim2.new(0,10,0,10)
+ToggleBtn.Text = "MENU"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(120,0,200)
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 14
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,12)
+
+-- Jendela Utama
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0,320,0,450)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -225)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25,22,40)
+MainFrame.Visible = true
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,10)
+
+-- Judul
+local Title = Instance.new("TextLabel", MainFrame)
+Title.Size = UDim2.new(1,0,0,40)
+Title.BackgroundColor3 = Color3.fromRGB(150,0,255)
+Title.Text = "LENGER STORE v1"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0,10)
+
+-- Pengaturan bisa digeser
+local Dragging = false
+local DragStart, StartPos
+Title.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        Dragging = true
+        DragStart = i.Position
+        StartPos = MainFrame.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(i)
+    if Dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+        local delta = i.Position - DragStart
+        MainFrame.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function() Dragging = false end)
+
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+-- Fungsi Tombol
+local function CreateToggle(name, pos, callback)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0.9,0,0,40)
+    btn.Position = pos
+    btn.BackgroundColor3 = Color3.fromRGB(40,35,60)
+    btn.Text = name.." : OFF"
+    btn.TextColor3 = Color3.new(0.8,0.8,0.8)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+    local on = false
+    btn.MouseButton1Click:Connect(function()
+        on = not on
+        btn.Text = name.." : "..(on and "ON" or "OFF")
+        btn.TextColor3 = on and Color3.new(1,1,1) or Color3.new(0.8,0.8,0.8)
+        btn.BackgroundColor3 = on and Color3.fromRGB(150,0,255) or Color3.fromRGB(40,35,60)
+        callback(on)
+    end)
+end
+
+local function CreateTPButton(name, pos, cframe)
+    local btn = Instance.new("TextButton", MainFrame)
+    btn.Size = UDim2.new(0.9,0,0,35)
+    btn.Position = pos
+    btn.BackgroundColor3 = Color3.fromRGB(40,35,60)
+    btn.Text = "🚶 "..name
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 13
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+    btn.MouseButton1Click:Connect(function()
+        if Character and RootPart then RootPart.CFrame = cframe end
+    end)
+end
+
+-- Pasang Semua Fitur
+CreateToggle("Bertani Otomatis", UDim2.new(0.05,0,0.15,0), function(v) Settings.AutoFarm = v end)
+CreateToggle("ESP Pemain", UDim2.new(0.05,0,0.25,0), function(v) Settings.ESP = v end)
+CreateToggle("Tembus Dinding", UDim2.new(0.05,0,0.35,0), function(v) Settings.NoClip = v end)
+CreateToggle("Anti Mati", UDim2.new(0.05,0,0.45,0), function(v) Settings.AntiDeath = v end)
+
+-- Tombol Teleport
+local y = 0.55
+for nama, pos in pairs(Settings.TeleportLocations) do
+    CreateTPButton(nama, UDim2.new(0.05,0,y,0), pos)
+    y = y + 0.09
+end
+
+-- ==================================================
+-- SISTEM LAINNYA (ESP, Anti Mati)
+-- ==================================================
+-- ESP
+RunService.RenderStepped:Connect(function()
+    if not Settings.ESP then return end
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+            local head = p.Character.Head
+            if not head:FindFirstChild("ESP") then
+                local bill = Instance.new("BillboardGui", head)
+                bill.Name = "ESP"
+                bill.AlwaysOnTop = true
+                bill.Size = UDim2.new(0,80,0,25)
+                local lbl = Instance.new("TextLabel", bill)
+                lbl.Size = UDim2.new(1,0,1,0)
+                lbl.BackgroundTransparency = 1
+                lbl.Text = p.Name
+                lbl.TextColor3 = Color3.new(1,0,0)
+                lbl.Font = Enum.Font.SourceSansBold
+                lbl.TextSize = 12
+            end
+        end
+    end
+end)
+
+-- Anti Mati
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    RootPart = Character:WaitForChild("HumanoidRootPart")
+    local hum = Character:WaitForChild("Humanoid")
+    hum.HealthChanged:Connect(function(h)
+        if Settings.AntiDeath and h < 20 then
+            RootPart.CFrame = Settings.TeleportLocations["Tempat Aman"]
+            hum.Health = hum.MaxHealth
+        end
+    end)
+end)
+
+print("✅ LENGER STORE v1 dimuat sukses (Versi HP)")
