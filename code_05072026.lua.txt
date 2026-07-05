@@ -1,0 +1,563 @@
+-- [[ SOUTH BRONX ALL-IN-ONE HUB V9 + HP COMPATIBILITY BYPASS ]] --
+-- Credits: by elbaihaqi
+-- Features: Auto Marshmallow, ESP, Extreme FPS Boost, Separate Player & Vehicle TP, HP Fix
+
+-- =========================================================
+-- [ BAGIAN BYPASS KHUSUS HP - DITAMBAHKAN ]
+-- =========================================================
+if LPH_OBFUSCATED == nil then
+    local G = getgenv()
+    local function encnum(n) return n end
+    local function encstr(s) return s end
+    local function jit(f) return f end
+    local function novirt(f) return f end
+    local function noupv(f) return f end
+    local function crash() end
+
+    rawset(G, "LPH_ENCNUM",        encnum)
+    rawset(G, "LPH_NUMENC",        encnum)
+    rawset(G, "LPH_ENCSTR",        encstr)
+    rawset(G, "LPH_STRENC",        encstr)
+    rawset(G, "LPH_JIT",           jit)
+    rawset(G, "LPH_JIT_MAX",       jit)
+    rawset(G, "LPH_NO_VIRTUALIZE", novirt)
+    rawset(G, "LPH_NO_UPVALUES",   noupv)
+    rawset(G, "LPH_CRASH",         crash)
+end
+
+-- Perbaiki layanan yang sering bermasalah di HP
+local Players = cloneref and cloneref(game:GetService("Players")) or game:GetService("Players")
+local ReplicatedStorage = cloneref and cloneref(game:GetService("ReplicatedStorage")) or game:GetService("ReplicatedStorage")
+local VirtualInputManager = cloneref and cloneref(game:GetService("VirtualInputManager")) or game:GetService("VirtualInputManager")
+
+-- =========================================================
+-- [ AWAL SKRIP UTAMA ]
+-- =========================================================
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local CreditsLabel = Instance.new("TextLabel")
+local ToggleButton = Instance.new("TextButton")
+local TabHandler = Instance.new("Frame")
+local UIListLayout_Tab = Instance.new("UIListLayout")
+local Container = Instance.new("Frame")
+local Pages = Instance.new("Folder")
+
+-- UI Pages
+local MainPage = Instance.new("ScrollingFrame")
+local ESPPage = Instance.new("ScrollingFrame")
+local PlayerTPPage = Instance.new("ScrollingFrame")
+local VehicleTPPage = Instance.new("ScrollingFrame")
+
+-- Setup ScreenGui
+ScreenGui.Name = "SB_AllInOne_V9"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local COLORS = {
+    Bg = Color3.fromRGB(22, 20, 35),
+    Accent = Color3.fromRGB(150, 0, 255),
+    Text = Color3.fromRGB(255,255,255),
+    Btn = Color3.fromRGB(35,30,50),
+    BtnOn = Color3.fromRGB(150,0,255),
+    TextOn = Color3.fromRGB(255,255,255),
+    TextOff = Color3.fromRGB(180,180,180),
+    Credits = Color3.fromRGB(130,130,130)
+}
+
+-- Toggle Button
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = COLORS.Btn
+ToggleButton.Position = UDim2.new(0, 10, 0, 10)
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Text = "MENU"
+ToggleButton.TextColor3 = COLORS.Text
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 14
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+ToggleCorner.Parent = ToggleButton
+
+-- Main Frame
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = COLORS.Bg
+MainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 500, 0, 350)
+MainFrame.Visible = true
+MainFrame.ClipsDescendants = true
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+-- Title
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = COLORS.Accent
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Text = "LENGER STORE Hub v1"
+Title.TextColor3 = COLORS.Text
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.Parent = Title
+
+-- Watermark / Kredit Player
+CreditsLabel.Name = "CreditsLabel"
+CreditsLabel.Parent = MainFrame
+CreditsLabel.BackgroundTransparency = 1
+CreditsLabel.Position = UDim2.new(0, 95, 1, -25)
+CreditsLabel.Size = UDim2.new(1, -100, 0, 20)
+CreditsLabel.Font = Enum.Font.SourceSansItalic
+CreditsLabel.Text = "Created by: elbaihaqi | HP Compatible"
+CreditsLabel.TextColor3 = COLORS.Credits
+CreditsLabel.TextSize = 13
+CreditsLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+-- --- DRAGGABLE FUNGSI ---
+local UserInputService = game:GetService("UserInputService")
+local vim = VirtualInputManager
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+Title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+Title.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then update(input) end
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- --- TAB SYSTEM ---
+TabHandler.Name = "TabHandler"
+TabHandler.Parent = MainFrame
+TabHandler.BackgroundColor3 = Color3.fromRGB(30, 25, 50)
+TabHandler.Position = UDim2.new(0, 0, 0, 35)
+TabHandler.Size = UDim2.new(0, 120, 1, -35)
+
+UIListLayout_Tab.Parent = TabHandler
+UIListLayout_Tab.SortOrder = Enum.SortOrder.LayoutOrder
+
+Container.Name = "Container"
+Container.Parent = MainFrame
+Container.BackgroundTransparency = 1
+Container.Position = UDim2.new(0, 95, 0, 40)
+Container.Size = UDim2.new(1, -100, 1, -70)
+Pages.Parent = Container
+
+local function SetupPage(page)
+    page.Parent = Pages
+    page.BackgroundTransparency = 1
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.CanvasSize = UDim2.new(0, 0, 3.0, 0)
+    page.ScrollBarThickness = 3
+    page.Visible = false
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = page
+    layout.Padding = UDim.new(0, 6)
+end
+
+SetupPage(MainPage)
+SetupPage(ESPPage)
+SetupPage(PlayerTPPage)
+SetupPage(VehicleTPPage)
+MainPage.Visible = true
+
+local function CreateTab(name, page)
+    local TabBtn = Instance.new("TextButton")
+    TabBtn.Parent = TabHandler
+    TabBtn.BackgroundColor3 = COLORS.Btn
+    TabBtn.Size = UDim2.new(1, 0, 0, 40)
+    TabBtn.Font = Enum.Font.SourceSansBold
+    TabBtn.Text = name
+    TabBtn.TextColor3 = COLORS.Text
+    TabBtn.TextSize = 11
+
+    TabBtn.MouseButton1Click:Connect(function()
+        for _, p in pairs(Pages:GetChildren()) do
+            p.Visible = false
+        end
+        page.Visible = true
+    end)
+end
+
+CreateTab("🍬 CRAFT", MainPage)
+CreateTab("👁️ ESP & MISC", ESPPage)
+CreateTab("🚶 PLAYER TP", PlayerTPPage)
+CreateTab("🚗 VEHICLE TP", VehicleTPPage)
+
+-- --- FUNGSI TOGGLE ---
+local function CreateToggle(parent, name, callback)
+    local Toggle = Instance.new("TextButton")
+    Toggle.Parent = parent
+    Toggle.BackgroundColor3 = COLORS.Btn
+    Toggle.Size = UDim2.new(1, -5, 0, 35)
+    Toggle.Font = Enum.Font.Gotham
+    Toggle.Text = name .. " : OFF"
+    Toggle.TextColor3 = COLORS.TextOff
+    Toggle.TextSize = 13
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 4)
+    Corner.Parent = Toggle
+
+    local enabled = false
+    Toggle.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        if enabled then
+            Toggle.Text = name .. " : ON"
+            Toggle.TextColor3 = COLORS.TextOn
+        else
+            Toggle.Text = name .. " : OFF"
+            Toggle.TextColor3 = COLORS.TextOff
+        end
+        pcall(callback, enabled)
+    end)
+end
+
+-- =========================================================
+-- [FITUR BARU: BOOSTER FPS EKSTREM]
+-- =========================================================
+local function BoostMyFPS()
+    local lighting = game:GetService("Lighting")
+    lighting.GlobalShadows = false
+    lighting.FogEnd = 9e9
+    
+    for _, obj in pairs(lighting:GetChildren()) do
+        if obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("Clouds") or obj:IsA("BloomEffect") or obj:IsA("BlurEffect") or obj:IsA("DepthOfFieldEffect") or obj:IsA("SunRaysEffect") then
+            pcall(function() obj:Destroy() end)
+        end
+    end
+    
+    for _, v in pairs(game.Workspace:GetDescendants()) do
+        if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+            v.Enabled = false
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            pcall(function() v:Destroy() end)
+        elseif v:IsA("MeshPart") then
+            v.RenderFidelity = Enum.RenderFidelity.Performance
+            v.CollisionFidelity = Enum.CollisionFidelity.Box
+        end
+    end
+    
+    pcall(function() sethiddenproperty(game:GetService("Lighting"), "Technology", Enum.Technology.Compatibility) end)
+end
+
+CreateToggle(ESPPage, "Extreme FPS Booster", function(state)
+    if state then
+        BoostMyFPS()
+        print("FPS Boost Activated!")
+    end
+end)
+
+-- =========================================================
+-- [LOGIKA SEPARATE TELEPORTATION]
+-- =========================================================
+local targetCFrame = nil
+local bypassActive = false
+
+Players.LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+    if bypassActive and targetCFrame then
+        local root = newCharacter:WaitForChild("HumanoidRootPart", 15)
+        if root then
+            task.wait(0.4)
+            root.CFrame = targetCFrame
+            targetCFrame = nil
+            bypassActive = false
+        end
+    end
+end)
+
+local function CharacterTeleport(targetCF)
+    local player = Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    
+    targetCFrame = targetCF + Vector3.new(0, 3, 0)
+    bypassActive = true
+    if humanoid then humanoid.Health = 0 end
+end
+
+local function VehicleTeleport(targetCF)
+    local player = Players.LocalPlayer
+    local character = player.Character
+    if not character then return end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    
+    if humanoid and humanoid.SeatPart and (humanoid.SeatPart:IsA("VehicleSeat") or humanoid.SeatPart.Name == "DriveSeat") then
+        local seat = humanoid.SeatPart
+        local vehicleModel = seat.Parent
+        
+        if vehicleModel and vehicleModel:IsA("Model") then
+            if vehicleModel.PrimaryPart then
+                vehicleModel:SetPrimaryPartCFrame(targetCF + Vector3.new(0, 2, 0))
+            else
+                seat.CFrame = targetCF + Vector3.new(0, 2, 0)
+            end
+        else
+            seat.CFrame = targetCF + Vector3.new(0, 2, 0)
+        end
+    else
+        print("Teleport Gagal: Anda harus berada di kursi pengemudi kendaraan!")
+    end
+end
+
+local function CreateTPButton(parent, name, cframe, isVehicleType)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = parent
+    Btn.BackgroundColor3 = COLORS.Btn
+    Btn.Size = UDim2.new(1, -5, 0, 32)
+    Btn.Font = Enum.Font.SourceSansBold
+    Btn.Text = (isVehicleType and "🚗 " or "🚶 ") .. name
+    Btn.TextColor3 = COLORS.Text
+    Btn.TextSize = 12
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 4)
+    Corner.Parent = Btn
+
+    Btn.MouseButton1Click:Connect(function()
+        if isVehicleType then
+            VehicleTeleport(cframe)
+        else
+            CharacterTeleport(cframe)
+        end
+    end)
+end
+
+-- DAFTAR LOKASI
+local CustomLocations = {
+    {"Dealership", CFrame.new(732.15, 3.71, 440.84)},
+    {"NPC Marshmallow", CFrame.new(510.86, 3.59, 600.58)},
+    {"Gas Station Ujung", CFrame.new(-469.25, 3.86, 358.66)},
+    {"Gas Station Mid", CFrame.new(215.91, 3.74, -175.05)},
+    {"GS Tier", CFrame.new(1126.14, 3.79, 173.18)},
+    {"Kasino", CFrame.new(1154.55, 3.36, -36.99)},
+    {"Apart CSN 1", CFrame.new(1203.49, 3.71, -219.54)},
+    {"Apart CSN 2", CFrame.new(1178.86, 3.71, -229.99)},
+    {"Apart 1", CFrame.new(1141.56, 10.11, 450.21)},
+    {"Apart 2", CFrame.new(985.92, 10.11, 220.53)}
+}
+
+for _, loc in pairs(CustomLocations) do
+    CreateTPButton(PlayerTPPage, loc[1], loc[2], false)
+end
+
+for _, loc in pairs(CustomLocations) do
+    CreateTPButton(VehicleTPPage, loc[1], loc[2], true)
+end
+
+-- =========================================================
+-- LOGIKA MARSHMALLOW & ESP
+-- =========================================================
+local function PressE()
+    pcall(function()
+        vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        task.wait(0.1)
+        vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    end)
+end
+
+local function EquipItemSmart(keywords)
+    local player = Players.LocalPlayer
+    local backpack = player:FindFirstChild("Backpack")
+    local character = player.Character
+    if not backpack or not character then return false end
+    for _, tool in pairs(character:GetChildren()) do
+        if tool:IsA("Tool") then
+            local toolNameLower = string.lower(tool.Name)
+            for _, kw in pairs(keywords) do if string.find(toolNameLower, string.lower(kw)) then return true end end
+        end
+    end
+    for _, tool in pairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            local toolNameLower = string.lower(tool.Name)
+            for _, kw in pairs(keywords) do
+                if string.find(toolNameLower, string.lower(kw)) then
+                    local hum = character:FindFirstChildOfClass("Humanoid")
+                    if hum then hum:EquipTool(tool) end
+                    task.wait(0.6)
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Parent = MainPage
+statusLabel.Size = UDim2.new(1, 0, 0, 25)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Font = Enum.Font.SourceSansItalic
+statusLabel.Text = "Status: Idle"
+statusLabel.TextColor3 = COLORS.Text
+statusLabel.TextSize = 12
+
+local Keywords = {
+    Water = {"water", "air"},
+    Sugar = {"sugar", "gula", "block"}, 
+    Gelatin = {"gelatin", "gelatine"},
+    EmptyBag = {"empty bag", "tas kosong", "empty"}
+}
+
+local autoCook = false
+CreateToggle(MainPage, "Auto Craft Marshmallow", function(state)
+    autoCook = state
+    while autoCook do
+        if not autoCook then break end
+        statusLabel.Text = "⏳ [Process] Searching for Water..."
+        if EquipItemSmart(Keywords.Water) then
+            statusLabel.Text = "➕ [Added] Water Added! (Waiting 22s)..."
+            PressE() task.wait(22) task.wait(2)
+        else statusLabel.Text = "❌ [Failed] Water Not Found!" task.wait(2) end
+        
+        if not autoCook then break end
+        statusLabel.Text = "⏳ [Process] Searching for Sugar..."
+        if EquipItemSmart(Keywords.Sugar) then
+            statusLabel.Text = "➕ [Added] Sugar Added! (Waiting 2s)..."
+            PressE() task.wait(2)
+        else statusLabel.Text = "❌ [Failed] Sugar Not Found!" task.wait(2) end
+        
+        if not autoCook then break end
+        statusLabel.Text = "⏳ [Process] Searching for Gelatin..."
+        if EquipItemSmart(Keywords.Gelatin) then
+            statusLabel.Text = "➕ [Added] Gelatin Added! (Waiting 47s)..."
+            PressE() task.wait(47) task.wait(2)
+        else statusLabel.Text = "❌ [Failed] Gelatin Not Found!" task.wait(2) end
+        
+        if not autoCook then break end
+        statusLabel.Text = "⏳ [Process] Searching for Empty Bag..."
+        if EquipItemSmart(Keywords.EmptyBag) then
+            statusLabel.Text = "💰 [Success] Collecting Marshmallow..."
+            PressE() task.wait(3)
+        else statusLabel.Text = "❌ [Failed] Empty Bag Not Found!" task.wait(2) end
+        task.wait(1)
+    end
+    statusLabel.Text = "Status: Idle"
+end)
+
+-- [ESP Code]
+local espEnabled = false
+local espObjects = {}
+
+local function CreateESP(player)
+    if player == Players.LocalPlayer then return end
+    local function addESP()
+        if not player.Character then return end
+        local head = player.Character:WaitForChild("Head", 10)
+        if not head then return end
+        if head:FindFirstChild("ESP_Bill") then head.ESP_Bill:Destroy() end
+
+        local BillboardGui = Instance.new("BillboardGui")
+        local ESPLabel = Instance.new("TextLabel")
+        BillboardGui.Name = "ESP_Bill"
+        BillboardGui.Parent = head
+        BillboardGui.AlwaysOnTop = true
+        BillboardGui.Size = UDim2.new(0, 100, 0, 30)
+        BillboardGui.ExtentsOffset = Vector3.new(0, 3, 0)
+
+        ESPLabel.Parent = BillboardGui
+        ESPLabel.BackgroundTransparency = 1
+        ESPLabel.Size = UDim2.new(1, 0, 1, 0)
+        ESPLabel.Font = Enum.Font.SourceSansBold
+        ESPLabel.TextColor3 = COLORS.Text
+        ESPLabel.TextSize = 11
+        ESPLabel.TextStrokeTransparency = 0
+        table.insert(espObjects, BillboardGui)
+
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if not espEnabled or not player.Character or not player.Character:FindFirstChild("Head") then
+                if connection then connection:Disconnect() end
+                if BillboardGui then BillboardGui:Destroy() end
+                return
+            end
+            local myRoot = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local theirRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if myRoot and theirRoot then
+                local dist = math.floor((myRoot.Position - theirRoot.Position).Magnitude)
+                local holdingItem = "None"
+                local tool = player.Character:FindFirstChildOfClass("Tool")
+                if tool then holdingItem = tool.Name end
+                ESPLabel.Text = player.Name .. " [" .. dist .. "m]\nHolding: " .. holdingItem
+            end
+        end)
+    end
+    addESP()
+    player.CharacterAdded:Connect(addESP)
+end
+
+CreateToggle(ESPPage, "Player ESP", function(state)
+    espEnabled = state
+    if espEnabled then for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
+    else for _, o in pairs(espObjects) do if o then o:Destroy() end end espObjects = {} end
+end)
+Players.PlayerAdded:Connect(function(p) if espEnabled then CreateESP(p) end end)
+
+local AntiRK = false
+local SafePos = Vector3.new(480,5,-597)
+
+CreateToggle(ESPPage, "Anti RK", function(state)
+    AntiRK = state
+end)
+
+local function SetupAntiRK(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    local lastHealth = humanoid.Health
+
+    humanoid.HealthChanged:Connect(function(currentHealth)
+        if not AntiRK then
+            lastHealth = currentHealth
+            return
+        end
+
+        if currentHealth < lastHealth then
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if root then
+                if humanoid.SeatPart and humanoid.SeatPart:IsA("VehicleSeat") then
+                    local vehicle = humanoid.SeatPart.Parent
+
+                    if vehicle and vehicle:IsA("Model") and vehicle.PrimaryPart then
+                        vehicle:SetPrimaryPartCFrame(CFrame.new(SafePos + Vector3.new(0,3,0)))
+                    else
+                        humanoid.SeatPart.CFrame = CFrame.new(SafePos + Vector3.new(0,3,0))
+                    end
+                else
+                    root.CFrame = CFrame.new(SafePos)
+                end
+            end
+        end
+
+        lastHealth = currentHealth
+    end)
+end
+
+if Players.LocalPlayer.Character then
+    SetupAntiRK(Players.LocalPlayer.Character)
+end
+
+Players.LocalPlayer.CharacterAdded:Connect(SetupAntiRK)
+
+print("✅ South Bronx Hub V9 + HP Bypass Berhasil Dimuat!")
